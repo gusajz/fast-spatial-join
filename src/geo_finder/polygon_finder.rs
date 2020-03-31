@@ -5,7 +5,6 @@ use failure::Fail;
 use geojson::Error as GeoJsonError;
 use geojson::GeoJson;
 
-use std::fs;
 use std::io;
 use std::path;
 
@@ -13,9 +12,9 @@ use super::geo_finder_types::{PropertyMap, FindResult};
 use geo::algorithm::bounding_rect::BoundingRect;
 use geo::algorithm::centroid::Centroid;
 use geo::algorithm::contains::Contains;
-use geo::algorithm::haversine_distance::HaversineDistance;
-use geo::algorithm::euclidean_distance::EuclideanDistance;
-use geo::algorithm::closest_point::ClosestPoint;
+// use geo::algorithm::haversine_distance::HaversineDistance;
+// use geo::algorithm::euclidean_distance::EuclideanDistance;
+// use geo::algorithm::closest_point::ClosestPoint;
 use geo_types;
 use serde_json;
 use spade;
@@ -30,7 +29,7 @@ use serde;
 // TODO: import from base module (without super::super::)
 use super::super::cli_utils;
 
-use log::{error, info, warn};
+use log::{info};
 
 
 // #[cfg(test)] #[macro_use]
@@ -219,6 +218,7 @@ impl spade::SpatialObject for IndexablePolygon {
     }
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Fail)]
 pub enum PolygonFinderError {
     #[fail(display = "GeoJSON error: {}", _0)]

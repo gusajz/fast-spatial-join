@@ -5,13 +5,7 @@ use csv;
 use std::io;
 use std::time;
 
-use std::collections::HashMap;
-
 use log::{info, warn};
-
-use std::path;
-
-use super::geo_finder::FindResult;
 
 use failure::Fail;
 // use std::error::Error;
@@ -22,6 +16,7 @@ pub struct ProcessStats {
     pub error_lines: u32,
 }
 
+#[allow(dead_code)]
 #[derive(Debug, Fail)]
 pub enum FileProcessorError {
     #[fail(display = "invalid toolchain name:")]
@@ -162,15 +157,17 @@ pub fn spatial_polygons_join(
                 progress_bar.inc(record_size(&record));
 
                 if write_result.is_err() {
-                    warn!("Error writing row: {}", write_result.err().unwrap())
+                    break ;
+                    // warn!("Error writing row: {}", write_result.err().unwrap())
                 }
             }
         };
     }
 
-    csv_writer
-        .flush()
-        .map_err(|_| FileProcessorError::OtherError)?;
+    #[allow(unused_must_use)] {
+        csv_writer
+            .flush();
+    }
 
     progress_bar.finish();
 

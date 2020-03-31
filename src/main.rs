@@ -16,10 +16,6 @@ mod cli_utils;
 mod file_processor;
 mod geo_finder;
 
-use std::fs;
-
-use ascii::{AsciiChar, AsAsciiStr};
-
 use chrono::offset::Local;
 
 #[derive(Debug, Fail)]
@@ -34,17 +30,7 @@ fn save_finder(finder: &geo_finder::PolygonFinder, output_file: &path::Path) {
     bincode::serialize_into(buf_writer, &finder).unwrap();
 }
 
-fn get_state_index_path(dest_dir: &path::Path, state_code: &str) -> path::PathBuf {
-    return dest_dir.join(format!("{}.idx.bin", state_code));
-}
 
-fn load_finder_polygon(input_path: &path::Path) -> geo_finder::PolygonFinder {
-    // TODO: error handling.
-    let file_reader = std::fs::File::open(input_path).unwrap();
-    let buf_reader = std::io::BufReader::new(file_reader);
-    let result = bincode::deserialize_from(buf_reader).unwrap();
-    result
-}
 
 fn load_polygons_finder(input_path: &path::Path) -> geo_finder::PolygonFinder {
     // TODO: error handling.
@@ -164,7 +150,7 @@ fn run_polygons_classifier(
     index_file_path: &path::Path,
     input_file: &mut io::Read,
     file_size: Option<u64>,
-    output_file_path: &path::Path,
+    output_file: &mut io::Write,
     char_delimiter: u8,
     latitude_idx: usize,
     longitude_idx: usize,
@@ -175,14 +161,11 @@ fn run_polygons_classifier(
     let geo_index = load_polygons_finder(&index_file_path);
     info!("Index from '{}' loaded.", index_file_path.display());
 
-    info!("Writing to file {}.", output_file_path.display());
-    let mut output_file: Box<io::Write> = Box::new(std::fs::File::create(output_file_path)?);
-
     let process_result = file_processor::spatial_polygons_join(
         geo_index,
         input_file,
         file_size,
-        &mut output_file,
+        output_file,
         char_delimiter,
         latitude_idx,
         longitude_idx,
@@ -284,7 +267,7 @@ fn do_main() -> Result<(), Error> {
                                     .long("output")
                                     .help("Sets the output file to create.")
                                     .takes_value(true)
-                                    .required(true)
+                                    .required(false)
                             )
                             .arg(Arg::with_name("index")
                                 .short("x")
@@ -376,13 +359,31 @@ fn do_main() -> Result<(), Error> {
             }
         };
 
-        let output_file_path = run_matches.value_of("output").unwrap();
+
+        let output_file_path = run_matches.value_of("output");
+
+        let stdout = io::stdout();
+        let mut output_file: Box<io::Write> = match output_file_path
+        {
+            Some(path) => {
+                info!("Writing to file {}.", path);
+
+                let output_file: Box<io::Write> = Box::new(std::fs::File::create(path)?);
+                Box::new(output_file)
+            }
+            None => {
+                info!("Reading from stdin");
+                Box::new(stdout.lock())
+            }
+        };
+
+
 
         return run_polygons_classifier(
                 path::Path::new(index_path),
                 input_file.as_mut(),
                 input_file_size,
-                path::Path::new(output_file_path),
+                output_file.as_mut(),
                 char_delimiter,
                 latitude_idx,
                 longitude_idx,
