@@ -109,43 +109,6 @@ fn main() {
     };
 }
 
-// fn run_states_clasiffier(
-//     index_directory: &path::Path,
-//     input_file: &mut io::Read,
-//     file_size: Option<u64>,
-//     output_dir: &path::Path,
-//     char_delimiter: u8,
-//     latitude_idx: usize,
-//     longitude_idx: usize,
-// ) -> Result<(), Error> {
-//     let dest_dir_path_buf = index_directory.join("states.idx.bin");
-//     let index_file_path = dest_dir_path_buf.as_path();
-
-//     info!("Loading index from {}.", index_file_path.display());
-//     let geo_index: geo_finder::PolygonFinder = load_finder_polygon(index_file_path);
-//     info!("Index from {} loaded.", index_file_path.display());
-
-//     fs::create_dir_all(output_dir)?;
-
-//     let process_result = file_processor::states_classifier_run(
-//         geo_index,
-//         input_file,
-//         file_size,
-//         output_dir,
-//         char_delimiter,
-//         latitude_idx,
-//         longitude_idx,
-//     );
-
-//     match process_result {
-//         Ok(stats) => {
-//             info!("Stats: {:?}", stats);
-//             return Ok(());
-//         }
-//         Err(err) => return Err(Error::from(err)),
-//     }
-// }
-
 fn run_polygons_classifier(
     index_file_path: &path::Path,
     input_file: &mut io::Read,
@@ -182,58 +145,9 @@ fn run_polygons_classifier(
     }
 }
 
-// fn run_state(
-//     state_number: i32,
-//     index_directory: &path::Path,
-//     input_file: &mut io::Read,
-//     file_size: Option<u64>,
-//     output_dir: &path::Path,
-//     char_delimiter: u8,
-//     latitude_idx: usize,
-//     longitude_idx: usize,
-//     no_header: bool,
-// ) -> Result<(), Error> {
-//     let state_code = format!("{:02}", state_number);
-
-//     let index_file_path_buf = get_state_index_path(&index_directory, &state_code);
-//     let index_file_path = index_file_path_buf.as_path();
-
-//     info!("Loading index from {}.", index_file_path.display());
-//     let geo_index = load_finder_by_state(&index_file_path)?;
-//     info!("Index from {} loaded.", index_file_path.display());
-
-//     fs::create_dir_all(output_dir)?;
-
-//     let output_file_path = output_dir.join(format!("{}.output.txt", state_code));
-
-//     info!("Writing to file {}.", output_file_path.display());
-//     let mut output_file: Box<io::Write> = Box::new(std::fs::File::create(output_file_path)?);
-
-//     let process_result = file_processor::cvegeo_classifier_run(
-//         geo_index,
-//         input_file,
-//         file_size,
-//         &mut output_file,
-//         char_delimiter,
-//         latitude_idx,
-//         longitude_idx,
-//         vec!["CVEGEO"],
-//         vec!["polygon_type"],
-//         no_header,
-//     );
-
-//     match process_result {
-//         Ok(stats) => {
-//             info!("Stats: {:?}", stats);
-//             return Ok(());
-//         }
-//         Err(err) => return Err(Error::from(err)),
-//     }
-// }
-
 fn do_main() -> Result<(), Error> {
     let matches = App::new("locate_points")
-                    .version("1.0")
+                    .version("0.1.0")
                     .author("Gustavo Ajzenman")
                     .about("Spatial join with a Geojson")
                     .subcommand(
@@ -390,67 +304,6 @@ fn do_main() -> Result<(), Error> {
                 properties,
                 no_header,
             );
-
-        // if let Some(_) = run_matches.subcommand_matches("states") {
-        //     let index_directory_path = index_path;
-        //     return run_states_clasiffier(
-        //         path::Path::new(index_directory_path),
-        //         input_file.as_mut(),
-        //         input_file_size,
-        //         path::Path::new(output_file_path),
-        //         char_delimiter,
-        //         latitude_idx,
-        //         longitude_idx,
-        //     );
-        // }
-        // if let Some(single_state_matches) = run_matches.subcommand_matches("single_state") {
-        //     let index_directory_path = index_path;
-        //     let state_number = value_t!(single_state_matches, "state_code", i32).unwrap();
-
-        //     return run_state(
-        //         state_number,
-        //         path::Path::new(index_directory_path),
-        //         input_file.as_mut(),
-        //         input_file_size,
-        //         path::Path::new(output_file_path),
-        //         char_delimiter,
-        //         latitude_idx,
-        //         longitude_idx,
-        //         no_header
-        //     );
-        // } else
-        /*if let Some(_) = run_matches.subcommand_matches("singleton")*/
-        // {
-        //     return run_polygons_classifier(
-        //         path::Path::new(index_path),
-        //         input_file.as_mut(),
-        //         input_file_size,
-        //         path::Path::new(output_file_path),
-        //         char_delimiter,
-        //         latitude_idx,
-        //         longitude_idx,
-        //         no_header,
-        //     );
-        // }
-
-        // let stdout = io::stdout();
-        // let mut output_file: Box<io::Write> = match output_file_path {
-        //     Some(path) => {
-        //         info!("Outputting to {}", path);
-        //         Box::new(std::fs::File::create(path)?)
-        //     }
-        //     None => {
-        //         info!("Outputting to stdout");
-        //         Box::new(stdout.lock())
-        //     }
-        // };
-
-        // let mut props_names: Vec<&str> = Vec::new();
-        // if let Some(props) = run_matches.values_of("props") {
-        //     for prop_reference in props {
-        //         props_names.push(prop_reference);
-        //     }
-        // }
     }
 
     return Ok(());
