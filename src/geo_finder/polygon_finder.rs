@@ -28,7 +28,7 @@ use std::fs::File;
 use serde;
 
 // TODO: import from base module (without super::super::)
-use super::super::cli_utils;
+// use super::super::cli_utils;
 
 use log::{info};
 
@@ -278,44 +278,31 @@ impl PolygonFinder {
         PolygonFinder::new_from_string(&file_contents)
     }
 
-    pub fn new_from_string(geojson_str: &str) -> Result<PolygonFinder, PolygonFinderError> {
-        
+    pub fn new_from_string(geo_json_str: &str) -> Result<PolygonFinder, PolygonFinderError> {
 
+        let geo_json = geo_json_str.parse::<GeoJson>()?;
 
-        let progress_bar = cli_utils::create_progress_bar_count(false, "Parsing geojson...", None);
-        progress_bar.enable_steady_tick(200);
-        let geojson = geojson_str.parse::<GeoJson>()?;
-        progress_bar.finish();
-
-        let feature_collection = if let GeoJson::FeatureCollection(ctn) = geojson {
+        let feature_collection = if let GeoJson::FeatureCollection(ctn) = geo_json {
             ctn
         } else {
             return Err(PolygonFinderError::FeatureCollectionNotFound);
         };
 
-        let feature_count: u64 = feature_collection.features.len().try_into().unwrap();
-        let progress_bar = cli_utils::create_progress_bar_count(false, "Loading features...", Some(feature_count));
-    
+
         let polygons: Result<Vec<_>, _> = feature_collection
             .features
             .into_iter()
             .map(|f| {
-                progress_bar.inc(1); 
                 IndexablePolygon::new(f)
             })
             .collect();
 
-        progress_bar.finish();
 
         info!("Generating index");
 
-        // let progress_bar = cli_utils::create_progress_bar_count(false, "Generating index...", None);
-        // progress_bar.enable_steady_tick(200);
         info!("Bulk load");
         let tree = RTree::bulk_load(polygons?);
         info!("Bulk load ended");
-        // progress_bar.finish();
-        
 
         Ok(PolygonFinder { tree, neighbors_tests: 10 })
     }

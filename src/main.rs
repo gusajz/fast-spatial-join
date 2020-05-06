@@ -11,7 +11,6 @@ use simplelog;
 use std::io;
 use std::path::{Path};
 
-mod cli_utils;
 mod file_processor;
 mod geo_finder;
 

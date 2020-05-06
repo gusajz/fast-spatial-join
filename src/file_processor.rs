@@ -1,4 +1,3 @@
-use super::cli_utils;
 use super::geo_finder;
 
 use csv;
@@ -8,7 +7,7 @@ use std::time;
 use log::{info, warn};
 
 use failure::Fail;
-// use std::error::Error;
+
 
 const DEFAULT_PROPERTY_VALUE: &'static str = "-";
 
@@ -30,13 +29,6 @@ pub enum FileProcessorError {
 }
 
 #[inline]
-fn record_size(record: &csv::StringRecord) -> u64 {
-    use std::convert::TryInto;
-    let size: usize = record.iter().map(|e| e.len()).sum();
-    return size.try_into().unwrap();;
-}
-
-#[inline]
 fn fill_error_row(
     properties: &Vec<&str>,
     _err_message: &str,
@@ -53,7 +45,7 @@ fn fill_error_row(
 pub fn spatial_polygons_join(
     geo_finder: &geo_finder::PolygonFinder,
     input_file: &mut io::Read,
-    file_size: Option<u64>,
+    _file_size: Option<u64>,
     output_file: &mut io::Write,
     delimiter: u8,
     latitude_idx: usize,
@@ -62,7 +54,6 @@ pub fn spatial_polygons_join(
     no_header: bool,
     write_status: bool
 ) -> Result<ProcessStats, FileProcessorError> {
-    let progress_bar = cli_utils::create_progress_bar_bytes(false, "Processing...", file_size);
 
     let mut csv_reader = csv::ReaderBuilder::new()
         .delimiter(delimiter)
@@ -167,7 +158,6 @@ pub fn spatial_polygons_join(
                 // warn!("New record {:?}", new_record);
                 let write_result = csv_writer.write_record(&new_record);
 
-                progress_bar.inc(record_size(&record));
 
                 if write_result.is_err() {
                     break ;
@@ -182,7 +172,6 @@ pub fn spatial_polygons_join(
             .flush();
     }
 
-    progress_bar.finish();
 
     let end_instant = time::Instant::now();
     let elapsed_secs = (end_instant - start_instant).as_millis() as f32 / 1000.0f32;
