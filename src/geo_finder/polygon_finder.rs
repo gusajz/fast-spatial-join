@@ -8,6 +8,7 @@ use geojson::GeoJson;
 use std::io;
 use std::path;
 
+
 use super::geo_finder_types::{PropertyMap, FindResult};
 use geo::algorithm::bounding_rect::BoundingRect;
 use geo::algorithm::centroid::Centroid;
@@ -244,16 +245,17 @@ pub enum PolygonFinderError {
     Io(io::Error),
 }
 
+
 impl From<GeoJsonError> for PolygonFinderError {
     fn from(err: GeoJsonError) -> PolygonFinderError {
-        info!("Error parsing geojson: {}", err);
+        info!("Error parsing geo-json: {}", err);
         PolygonFinderError::Parse(err)
     }
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 pub struct PolygonFinder {
-    // geojson: GeoJson
+    // geo-json: GeoJson
     tree: RTree<IndexablePolygon>,
     neighbors_tests: usize
 }

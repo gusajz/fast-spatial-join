@@ -4,3 +4,4 @@ mod polygon_finder;
 
 pub use geo_finder_types::*;
 pub use polygon_finder::PolygonFinder;
+pub use polygon_finder::PolygonFinderError;

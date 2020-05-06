@@ -10,6 +10,8 @@ use log::{info, warn};
 use failure::Fail;
 // use std::error::Error;
 
+const DEFAULT_PROPERTY_VALUE: &'static str = "-";
+
 #[derive(Debug)]
 pub struct ProcessStats {
     pub total_lines: u32,
@@ -37,19 +39,19 @@ fn record_size(record: &csv::StringRecord) -> u64 {
 #[inline]
 fn fill_error_row(
     properties: &Vec<&str>,
-    err_message: &str,
+    _err_message: &str,
     new_record: &mut csv::StringRecord,
 ) {
     for _ in 0..properties.len() {
         new_record.push_field("");
     }
     new_record.push_field("error"); // Status
-    new_record.push_field(err_message); // Error message.
+    // new_record.push_field(err_message); // Error message.
 }
 
 
 pub fn spatial_polygons_join(
-    geo_finder: geo_finder::PolygonFinder,
+    geo_finder: &geo_finder::PolygonFinder,
     input_file: &mut io::Read,
     file_size: Option<u64>,
     output_file: &mut io::Write,
@@ -58,6 +60,7 @@ pub fn spatial_polygons_join(
     longitude_idx: usize,
     properties: Vec<&str>,
     no_header: bool,
+    write_status: bool
 ) -> Result<ProcessStats, FileProcessorError> {
     let progress_bar = cli_utils::create_progress_bar_bytes(false, "Processing...", file_size);
 
@@ -92,8 +95,10 @@ pub fn spatial_polygons_join(
             }
 
 
-            new_header.push("status".to_owned());
-            new_header.push("error_message".to_owned());
+            if write_status {
+                new_header.push("status".to_owned());
+            }
+            // new_header.push("error_message".to_owned());
 
             csv_writer.write_record(new_header).ok();
         }
@@ -132,20 +137,28 @@ pub fn spatial_polygons_join(
                         Some(find_result) => {
                             // info!("Props: {:?}", find_result.props);
                             for prop in &properties {
-                                let value: &str = find_result.props.get(prop as &str).unwrap(); //TODO: proper error handling
+                                let value: &str = match find_result.props.get(prop as &str) {
+                                    Some(r) => r,
+                                    None => &DEFAULT_PROPERTY_VALUE
+                                }; //TODO: proper error handling
+
                                 new_record.push_field(&value);
                             }
 
-                            new_record.push_field("success"); // Status
-                            new_record.push_field(""); // Error message
+                            if write_status {
+                                new_record.push_field("success"); // Status
+                            }
+                            // new_record.push_field(""); // Error message
                         }
                         None => {
                             error_lines += 1;
-                            fill_error_row(
-                                &properties,
-                                &format!("COORDINATES_NOT_FOUND: {:?}", (latitude, longitude)),
-                                &mut new_record,
-                            )
+                            if write_status {
+                                fill_error_row(
+                                    &properties,
+                                    &format!("COORDINATES_NOT_FOUND: {:?}", (latitude, longitude)),
+                                    &mut new_record,
+                                )
+                            }
                         }
                     }
                 }
